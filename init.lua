@@ -249,6 +249,15 @@ vim.keymap.set("n", "<leader>t", function()
 end, { silent = true, desc = "临时终端" })
 
 
+-- :Diff：浮窗里看 git 没提交的改动（整个文件，红 = 删掉的行，绿 = 新增的行；改了多个文件先选一个），
+-- 逻辑在 lua/gitdiff.lua，用到时才加载。用户命令必须大写开头，所以再加个缩写：手滑敲小写 :diff 也走它
+-- （小写 :diff 本来只是 :diffupdate 的缩写；:diffu 以上的写法不受影响）
+vim.api.nvim_create_user_command("Diff", function()
+    require("gitdiff").open()
+end, { desc = "浮窗看 git 未提交的改动" })
+vim.cmd([[cnoreabbrev <expr> diff getcmdtype() ==# ':' && getcmdline() ==# 'diff' ? 'Diff' : 'diff']])
+
+
 -- 空格 h：配置速查（help），内容在 lua/cheatsheet.lua，按键时才加载
 vim.keymap.set("n", "<leader>h", function()
     require("cheatsheet").show()

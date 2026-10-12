@@ -1,5 +1,6 @@
 -- 候选列表选择器：有 fzf 就在浮窗里跑 fzf（模糊搜索，鼠标也能点；用完进程即退出），
 -- 没有 fzf 就退回 location list。items = { { file?, lnum, col, display }, ... }
+-- index（可选）：fzf 打开时光标先落在第几项，不给就在第一项
 local M = {}
 
 local function loclist(items, title)
@@ -11,7 +12,7 @@ local function loclist(items, title)
     vim.cmd("lopen")
 end
 
-local function fzf(items, title, on_choice)
+local function fzf(items, title, on_choice, index)
     local infile, outfile = vim.fn.tempname(), vim.fn.tempname()
     local rows = {}
     for i, it in ipairs(items) do
@@ -35,8 +36,10 @@ local function fzf(items, title, on_choice)
         title_pos = "center",
     })
 
+    local start = index and index > 1 and ("--bind=" .. vim.fn.shellescape("start:pos(" .. index .. ")")) or ""
     local cmd = string.format(
-        "fzf --delimiter='\\t' --with-nth=2.. --tiebreak=index --layout=reverse --prompt=%s < %s > %s",
+        "fzf --delimiter='\\t' --with-nth=2.. --tiebreak=index --layout=reverse %s --prompt=%s < %s > %s",
+        start,
         vim.fn.shellescape(title .. "> "),
         vim.fn.shellescape(infile),
         vim.fn.shellescape(outfile)
@@ -65,12 +68,12 @@ local function fzf(items, title, on_choice)
     vim.cmd.startinsert()
 end
 
-function M.choose(items, title, on_choice)
+function M.choose(items, title, on_choice, index)
     if #items == 0 then
         return
     end
     if vim.fn.executable("fzf") == 1 then
-        fzf(items, title, on_choice)
+        fzf(items, title, on_choice, index)
     else
         loclist(items, title)
     end
